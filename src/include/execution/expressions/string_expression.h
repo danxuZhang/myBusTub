@@ -50,11 +50,14 @@ class StringExpression : public AbstractExpression {
     ans.resize(val.size());
 
     switch (expr_type_) {
-      case (StringExpressionType::Lower): std::transform(val.begin(), val.end(), ans.begin(), ::tolower);
-        break ;
-      case (StringExpressionType::Upper): std::transform(val.begin(), val.end(), ans.begin(), ::toupper);
-        break ;
-      default: throw std::runtime_error {"Unsupported expression type"} ;
+      case (StringExpressionType::Lower):
+        std::transform(val.begin(), val.end(), ans.begin(), ::tolower);
+        break;
+      case (StringExpressionType::Upper):
+        std::transform(val.begin(), val.end(), ans.begin(), ::toupper);
+        break;
+      default:
+        throw std::runtime_error{"Unsupported expression type"};
     }
 
     // fmt::println("{} -> {}", val, ans);

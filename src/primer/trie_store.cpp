@@ -15,7 +15,7 @@ auto TrieStore::Get(std::string_view key) -> std::optional<ValueGuard<T>> {
 
   Trie local_root;
   {
-    std::lock_guard<std::mutex> guard {root_lock_};
+    std::lock_guard<std::mutex> guard{root_lock_};
     local_root = root_;
   }
 
@@ -23,7 +23,7 @@ auto TrieStore::Get(std::string_view key) -> std::optional<ValueGuard<T>> {
   if (val == nullptr) {
     return std::nullopt;
   }
-  return ValueGuard<T> {local_root, *val};
+  return ValueGuard<T>{local_root, *val};
 }
 
 template <class T>
@@ -31,17 +31,17 @@ void TrieStore::Put(std::string_view key, T value) {
   // You will need to ensure there is only one writer at a time. Think of how you can achieve this.
   // The logic should be somehow similar to `TrieStore::Get`.
   // throw NotImplementedException("TrieStore::Put is not implemented.");
-  std::lock_guard<std::mutex> w_guard {write_lock_};
+  std::lock_guard<std::mutex> w_guard{write_lock_};
 
   Trie local_root;
   {
-    std::lock_guard<std::mutex> guard {root_lock_};
+    std::lock_guard<std::mutex> guard{root_lock_};
     local_root = root_;
   }
 
   auto new_root = local_root.Put(key, std::move(value));
   {
-    std::lock_guard<std::mutex> r_guard {root_lock_};
+    std::lock_guard<std::mutex> r_guard{root_lock_};
     root_ = new_root;
   }
 }
@@ -50,17 +50,17 @@ void TrieStore::Remove(std::string_view key) {
   // You will need to ensure there is only one writer at a time. Think of how you can achieve this.
   // The logic should be somehow similar to `TrieStore::Get`.
   // throw NotImplementedException("TrieStore::Remove is not implemented.");
-  std::lock_guard<std::mutex> w_guard {write_lock_};
+  std::lock_guard<std::mutex> w_guard{write_lock_};
 
   Trie local_root;
   {
-    std::lock_guard<std::mutex> guard {root_lock_};
+    std::lock_guard<std::mutex> guard{root_lock_};
     local_root = root_;
   }
 
   auto new_root = local_root.Remove(key);
   {
-    std::lock_guard<std::mutex> r_guard {root_lock_};
+    std::lock_guard<std::mutex> r_guard{root_lock_};
     root_ = new_root;
   }
 }
