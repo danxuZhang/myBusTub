@@ -67,6 +67,35 @@ TEST(TrieTest, PutGetOnePath) {
   ASSERT_EQ(*trie.Get<uint32_t>("1111"), 1111);
 }
 
+TEST(TrieTest, PutGetOnePathExtended) {
+  auto trie = Trie();
+  trie = trie.Put<uint32_t>("123", 123);
+  ASSERT_EQ(*trie.Get<uint32_t>("123"), 123);
+  trie = trie.Put<uint32_t>("12", 12);
+  ASSERT_EQ(*trie.Get<uint32_t>("12"), 12);
+  ASSERT_EQ(*trie.Get<uint32_t>("123"), 123);
+  trie = trie.Put<uint32_t>("12345", 12345);
+  ASSERT_EQ(*trie.Get<uint32_t>("12345"), 12345);
+  ASSERT_EQ(*trie.Get<uint32_t>("123"), 123);
+  ASSERT_EQ(*trie.Get<uint32_t>("12"), 12);
+  trie = trie.Put<uint32_t>("1234", 1234);
+  ASSERT_EQ(*trie.Get<uint32_t>("12345"), 12345);
+  ASSERT_EQ(*trie.Get<uint32_t>("1234"), 1234);
+  ASSERT_EQ(*trie.Get<uint32_t>("123"), 123);
+  ASSERT_EQ(*trie.Get<uint32_t>("12"), 12);
+  trie = trie.Put<uint32_t>("123456", 123456);
+  ASSERT_EQ(*trie.Get<uint32_t>("123456"), 123456);
+  ASSERT_EQ(*trie.Get<uint32_t>("12345"), 12345);
+  ASSERT_EQ(*trie.Get<uint32_t>("1234"), 1234);
+  ASSERT_EQ(*trie.Get<uint32_t>("123"), 123);
+  ASSERT_EQ(*trie.Get<uint32_t>("12"), 12);
+  trie = trie.Put<uint32_t>("12", 21);
+  ASSERT_EQ(*trie.Get<uint32_t>("12"), 21);
+  ASSERT_EQ(*trie.Get<uint32_t>("123"), 123);
+  ASSERT_EQ(*trie.Get<uint32_t>("1234"), 1234);
+  ASSERT_EQ(*trie.Get<uint32_t>("12345"), 12345);
+}
+
 TEST(TrieTest, BasicRemoveTest1) {
   auto trie = Trie();
   // Put something
