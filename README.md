@@ -1,3 +1,9 @@
+# Update
+
+* Oct 24, 2023: Complete [Project #0: C++ Primer](https://15445.courses.cs.cmu.edu/fall2023/project0/)
+
+---
+
 <img src="logo/bustub-whiteborder.svg" alt="BusTub Logo" height="200">
 
 -----------------
