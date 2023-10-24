@@ -15,6 +15,10 @@ auto Trie::Get(std::string_view key) const -> const T * {
   // dynamic_cast returns `nullptr`, it means the type of the value is mismatched, and you should return nullptr.
   // Otherwise, return the value.
 
+  if (!root_) {
+    return nullptr;
+  }
+
   auto node = root_;
 
   for (char ch : key) {
@@ -116,10 +120,50 @@ auto Trie::Put(std::string_view key, T value) const -> Trie {
 }
 
 auto Trie::Remove(std::string_view key) const -> Trie {
-  throw NotImplementedException("Trie::Remove is not implemented.");
+  // throw NotImplementedException("Trie::Remove is not implemented.");
 
   // You should walk through the trie and remove nodes if necessary. If the node doesn't contain a value any more,
   // you should convert it to `TrieNode`. If a node doesn't have children any more, you should remove it.
+  if (!root_) {
+    return Trie{};
+  }
+
+  std::stack<std::shared_ptr<const TrieNode>> node_stack;
+
+  auto node = root_;
+  auto it = key.begin();
+  while (it != key.end()) {
+    node_stack.push(node);
+    auto child = node->children_.find(*it);
+    if (child == node->children_.end()) {
+      return Trie{root_};
+    }
+    node = child->second;
+    ++it;
+  }
+
+  if (!node->is_value_node_) {
+    return Trie{root_};
+  }
+
+  node = std::make_shared<const TrieNode>(node->children_);
+
+  for (auto rit = key.rbegin(); rit != key.rend(); ++rit) {
+    auto new_parent = node_stack.top()->Clone();
+    if (node->children_.empty() && !node->is_value_node_) {
+      new_parent->children_.erase(*rit);
+    } else {
+      new_parent->children_[*rit] = node;
+    }
+    node = std::move(new_parent);
+    node_stack.pop();
+  }
+
+  if (node->children_.empty()) {
+    return Trie{};
+  } else {
+    return Trie{node};
+  }
 }
 
 // Below are explicit instantiation of template functions.
