@@ -1,4 +1,6 @@
 #include "primer/trie.h"
+#include <memory>
+#include <stack>
 #include <string_view>
 #include "common/exception.h"
 
@@ -17,23 +19,100 @@ auto Trie::Get(std::string_view key) const -> const T * {
 
   for (char ch : key) {
     auto child_it = node->children_.find(ch);
-    if (child_it != node->children_.end()) {
+    if (child_it == node->children_.end()) {
       return nullptr;
     }
     node = child_it->second;
   }
 
   auto val_node = std::dynamic_pointer_cast<const TrieNodeWithValue<T>>(node);
-  return val_node ? val_node->value_.get(): nullptr;
+  return val_node ? val_node->value_.get() : nullptr;
 }
 
 template <class T>
 auto Trie::Put(std::string_view key, T value) const -> Trie {
   // Note that `T` might be a non-copyable type. Always use `std::move` when creating `shared_ptr` on that value.
-  throw NotImplementedException("Trie::Put is not implemented.");
+  // throw NotImplementedException("Trie::Put is not implemented.");
 
   // You should walk through the trie and create new nodes if necessary. If the node corresponding to the key already
   // exists, you should create a new `TrieNodeWithValue`.
+
+  if (!root_) {
+    // Handle the empty trie case by creating a new trie with a single key-value pair.
+    std::shared_ptr<TrieNode> current_node =
+        std::make_shared<TrieNodeWithValue<T>>(std::make_shared<T>(std::move(value)));
+    for (auto it = key.rbegin(); it != key.rend(); ++it) {
+      auto new_node =
+          std::make_shared<TrieNode>(std::map<char, std::shared_ptr<const TrieNode>>({{*it, current_node}}));
+      current_node = std::move(new_node);
+    }
+    return Trie{current_node};
+  }
+
+  std::stack<std::shared_ptr<const TrieNode>> node_stack;
+
+  auto node = root_;
+  auto it = key.begin();
+  while (it != key.end()) {
+    node_stack.push(node);
+    auto child = node->children_.find(*it);
+    if (child == node->children_.end()) {
+      break;
+    }
+    node = child->second;
+    ++it;
+  }
+
+  if (it == key.end()) {
+    std::shared_ptr<const TrieNode> current_node =
+        std::make_shared<const TrieNodeWithValue<T>>(node->children_, std::make_shared<T>(std::move(value)));
+
+    for (auto rit = key.rbegin(); rit != key.rend(); ++rit) {
+      auto last_parent = node_stack.top();
+      auto new_children = last_parent->children_;
+      new_children[*rit] = current_node;
+      std::shared_ptr<const TrieNode> new_parent;
+      auto val_node = std::dynamic_pointer_cast<const TrieNodeWithValue<T>>(last_parent);
+      if (val_node) {
+        new_parent = std::make_shared<const TrieNodeWithValue<T>>(new_children, val_node->value_);
+      } else {
+        new_parent = std::make_shared<const TrieNode>(new_children);
+      }
+      node_stack.pop();
+      current_node = std::move(new_parent);
+    }
+
+    return Trie{current_node};
+  }
+
+  auto rit = key.rbegin();
+
+  std::shared_ptr<const TrieNode> current_node =
+      std::make_shared<const TrieNodeWithValue<T>>(std::make_shared<T>(std::move(value)));
+  while (std::distance(it, rit.base()) > 1) {
+    auto new_node = std::make_shared<TrieNode>(std::map<char, std::shared_ptr<const TrieNode>>({{*rit, current_node}}));
+    current_node = new_node;
+    rit++;
+  }
+
+  while (!node_stack.empty()) {
+    char ch = *rit;
+    auto old_parent = node_stack.top();
+    auto new_children = old_parent->children_;
+    new_children[ch] = current_node;
+    auto old_val_node = std::dynamic_pointer_cast<const TrieNodeWithValue<T>>(old_parent);
+    std::shared_ptr<const TrieNode> new_node;
+    if (old_val_node) {
+      new_node = std::make_shared<const TrieNodeWithValue<T>>(new_children, old_val_node->value_);
+    } else {
+      new_node = std::make_shared<const TrieNode>(new_children);
+    }
+    rit++;
+    node_stack.pop();
+    current_node = new_node;
+  }
+
+  return Trie{current_node};
 }
 
 auto Trie::Remove(std::string_view key) const -> Trie {
