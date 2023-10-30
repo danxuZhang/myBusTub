@@ -17,10 +17,14 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "catalog/catalog.h"
 #include "common/config.h"
 #include "concurrency/lock_manager.h"
 #include "concurrency/transaction.h"
 #include "recovery/log_manager.h"
+
+// If this is defined, project 4 related logic will be enabled.
+// #define BUSTUB_REFSOL_HACK_TXN_MANAGER_IMPLEMENTED
 
 namespace bustub {
 class LockManager;
@@ -71,10 +75,11 @@ class TransactionManager {
   void Abort(Transaction *txn);
 
   /**
-   * The transaction map is a global list of all the running transactions in the system.
+   * Global list of running transactions
    */
+
+  /** The transaction map is a global list of all the running transactions in the system. */
   std::unordered_map<txn_id_t, Transaction *> txn_map_;
-  /** Coordination for the transaction map */
   std::shared_mutex txn_map_mutex_;
 
   /**
@@ -95,6 +100,19 @@ class TransactionManager {
 
   /** Resumes all transactions, used for checkpointing. */
   void ResumeTransactions();
+
+  Catalog *catalog_;
+
+  /**
+   * Set we're in terrier bench mode
+   */
+  inline void SetTerrier() { terrier_ = true; }
+
+  /**
+   * Get if we're in terrier bench mode
+   * @return boolean indicating terrier mode
+   */
+  inline auto GetTerrier() -> bool { return terrier_; }
 
  private:
   /**
@@ -150,6 +168,9 @@ class TransactionManager {
   std::atomic<txn_id_t> next_txn_id_{0};
   LockManager *lock_manager_ __attribute__((__unused__));
   LogManager *log_manager_ __attribute__((__unused__));
+
+  /** Terrier Bench Hack */
+  bool terrier_{false};
 };
 
 }  // namespace bustub

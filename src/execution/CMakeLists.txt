@@ -19,9 +19,11 @@ add_library(
         seq_scan_executor.cpp
         sort_executor.cpp
         topn_executor.cpp
+        topn_per_group_executor.cpp
         topn_check_executor.cpp
         update_executor.cpp
         values_executor.cpp
+        window_function_executor.cpp
 )
 
 set(ALL_OBJECT_FILES

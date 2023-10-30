@@ -327,8 +327,11 @@ set(P3_FILES
         "src/include/execution/executors/seq_scan_executor.h"
         "src/include/execution/executors/sort_executor.h"
         "src/include/execution/executors/topn_executor.h"
+        "src/include/execution/executors/topn_per_group_executor.h"
         "src/include/execution/executors/update_executor.h"
+        "src/include/execution/executors/window_function_executor.h"
         "src/execution/aggregation_executor.cpp"
+        "src/execution/window_function_executor.cpp"
         "src/execution/delete_executor.cpp"
         "src/execution/filter_executor.cpp"
         "src/execution/hash_join_executor.cpp"
@@ -339,6 +342,7 @@ set(P3_FILES
         "src/execution/seq_scan_executor.cpp"
         "src/execution/sort_executor.cpp"
         "src/execution/topn_executor.cpp"
+        "src/execution/topn_per_group_executor.cpp"
         "src/execution/update_executor.cpp"
         "src/include/optimizer/optimizer.h"
         "src/include/optimizer/optimizer_internal.h"
@@ -346,8 +350,9 @@ set(P3_FILES
         "src/optimizer/optimizer_custom_rules.cpp"
         "src/optimizer/sort_limit_as_topn.cpp"
         "src/optimizer/optimizer_internal.cpp"
+        "src/optimizer/seqscan_as_indexscan.cpp"
         "src/common/bustub_ddl.cpp"
-        "src/include/execution/plans/index_scan_plan.h"
+        "src/include/execution/plans/topn_per_group_plan.h"
         ${P2_FILES}
 )
 
