@@ -27,18 +27,48 @@ enum class AccessType { Unknown = 0, Lookup, Scan, Index };
 
 class LRUKNode {
  public:
+  /**
+   * @brief Constructs a new LRU-K Node.
+   * @param fid The frame id associated with this node.
+   * @param k The value of K for the LRU-K algorithm.
+   */
   LRUKNode(frame_id_t fid, size_t k);
 
+  /**
+   * @brief Retrieves the frame id associated with this node.
+   * @return The frame id.
+   */
   auto GetFrameId() const -> frame_id_t;
 
+  /**
+   * @brief Checks if the node is evictable.
+   * @return True if the node is evictable, otherwise False.
+   */
   auto IsEvictable() const -> bool;
 
+  /**
+   * @brief Sets the evictable status of this node.
+   * @param set_evictable The evictable status to be set.
+   */
   auto SetEvictable(bool set_evictable) -> void;
 
+  /**
+   * @brief Records an access at the given timestamp.
+   * @param timestamp The timestamp of the access.
+   */
   auto RecordAccess(size_t timestamp) -> void;
 
+  /**
+   * @brief Retrieves the earliest timestamp from the node's access history.
+   * @return The earliest timestamp.
+   */
   auto GetEarliestTimestamp() const -> size_t;
 
+  /**
+   * @brief Computes the backward K-distance based on the current timestamp.
+   * @param current_timestamp The current timestamp.
+   * @return The computed backward K-distance.
+   */
   auto GetKBackDist(size_t current_timestamp) const -> size_t;
 
  private:

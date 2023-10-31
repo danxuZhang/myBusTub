@@ -30,7 +30,6 @@ auto LRUKNode::RecordAccess(size_t timestamp) -> void {
     history_.pop_front();
   }
   history_.push_back(timestamp);
-  assert(!history_.empty());
 }
 
 auto LRUKNode::GetEarliestTimestamp() const -> size_t { return history_.front(); }
@@ -98,7 +97,7 @@ void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType
   if (it == node_store_.end()) {
     LRUKNode new_node{frame_id, k_};
     new_node.RecordAccess(current_timestamp_);
-    node_store_.insert({frame_id, new_node});
+    node_store_.emplace(frame_id, new_node);
   } else {
     it->second.RecordAccess(current_timestamp_);
   }
