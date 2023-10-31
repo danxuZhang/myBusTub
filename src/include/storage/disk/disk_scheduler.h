@@ -55,8 +55,6 @@ class DiskScheduler {
   ~DiskScheduler();
 
   /**
-   * TODO(P1): Add implementation
-   *
    * @brief Schedules a request for the DiskManager to execute.
    *
    * @param r The request to be scheduled.
@@ -64,8 +62,6 @@ class DiskScheduler {
   void Schedule(DiskRequest r);
 
   /**
-   * TODO(P1): Add implementation
-   *
    * @brief Background worker thread function that processes scheduled requests.
    *
    * The background thread needs to process requests while the DiskScheduler exists, i.e., this function should not
@@ -85,7 +81,7 @@ class DiskScheduler {
 
  private:
   /** Pointer to the disk manager. */
-  DiskManager *disk_manager_ __attribute__((__unused__));
+  DiskManager *disk_manager_ __attribute__(());
   /** A shared queue to concurrently schedule and process requests. When the DiskScheduler's destructor is called,
    * `std::nullopt` is put into the queue to signal to the background thread to stop execution. */
   Channel<std::optional<DiskRequest>> request_queue_;
