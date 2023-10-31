@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "buffer/lru_k_replacer.h"
+#include <algorithm>
 #include "common/exception.h"
 
 namespace bustub {
@@ -34,12 +35,12 @@ auto LRUKNode::RecordAccess(size_t timestamp) -> void {
 
 auto LRUKNode::GetEarliestTimestamp() const -> size_t { return history_.front(); }
 
-auto LRUKNode::GetKBackDist() const -> size_t {
+auto LRUKNode::GetKBackDist(size_t current_timestamp) const -> size_t {
   if (history_.size() < k_) {
     return INF_TIMESTAMP;
   }
 
-  return history_.front();
+  return current_timestamp - history_.front();
 }
 
 LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k) : replacer_size_(num_frames), k_(k) {}
@@ -59,7 +60,7 @@ auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
       continue;
     }
 
-    size_t k_dist = node.GetKBackDist();
+    size_t k_dist = node.GetKBackDist(current_timestamp_);
     if (k_dist == INF_TIMESTAMP) {
       inf_nodes.push_back(std::make_unique<LRUKNode>(node));
       continue;

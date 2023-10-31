@@ -39,7 +39,7 @@ class LRUKNode {
 
   auto GetEarliestTimestamp() const -> size_t;
 
-  auto GetKBackDist() const -> size_t;
+  auto GetKBackDist(size_t current_timestamp) const -> size_t;
 
  private:
   /** History of last seen K timestamps of this page. Least recent timestamp stored in front. */
