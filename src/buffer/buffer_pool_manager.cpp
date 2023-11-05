@@ -46,6 +46,8 @@ auto BufferPoolManager::ResetPageMetaInFrame(frame_id_t frame_id) -> void {
 }
 
 auto BufferPoolManager::NewPage(page_id_t *page_id) -> Page * {
+  std::lock_guard<std::mutex> guard{latch_};
+
   if (free_list_.empty() && replacer_->Size() == 0) {
     return nullptr;
   }
@@ -57,15 +59,12 @@ auto BufferPoolManager::NewPage(page_id_t *page_id) -> Page * {
   } else {
     replacer_->Evict(&replacement_frame);
     if (pages_[replacement_frame].IsDirty()) {
-      FlushPage(pages_[replacement_frame].GetPageId());
+      WritePageToDisk(pages_[replacement_frame].GetPageId());
     }
     page_table_.erase(pages_[replacement_frame].GetPageId());
   }
 
-  {
-    std::lock_guard<std::mutex> guard{latch_};
-    *page_id = AllocatePage();
-  }
+  *page_id = AllocatePage();
 
   page_table_[*page_id] = replacement_frame;
   ResetPageMetaInFrame(replacement_frame);
@@ -79,6 +78,7 @@ auto BufferPoolManager::NewPage(page_id_t *page_id) -> Page * {
 }
 
 auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType access_type) -> Page * {
+  std::lock_guard<std::mutex> guard{latch_};
   auto fid_it = page_table_.find(page_id);
 
   if (fid_it == page_table_.end()) {
@@ -97,7 +97,7 @@ auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType
     }
 
     if (pages_[replacement_frame].IsDirty()) {
-      FlushPage(pages_[replacement_frame].GetPageId());
+      WritePageToDisk(pages_[replacement_frame].GetPageId());
     }
     ResetPageMetaInFrame(replacement_frame);
     page_table_[page_id] = replacement_frame;
@@ -124,6 +124,7 @@ auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType
 }
 
 auto BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty, [[maybe_unused]] AccessType access_type) -> bool {
+  std::lock_guard<std::mutex> guard{latch_};
   if (page_table_.find(page_id) == page_table_.end()) {
     return false;
   }
@@ -145,7 +146,7 @@ auto BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty, [[maybe_unus
   return true;
 }
 
-auto BufferPoolManager::FlushPage(page_id_t page_id) -> bool {
+auto BufferPoolManager::WritePageToDisk(page_id_t page_id) -> bool {
   if (page_table_.find(page_id) == page_table_.end()) {
     return false;
   }
@@ -162,13 +163,20 @@ auto BufferPoolManager::FlushPage(page_id_t page_id) -> bool {
   return true;
 }
 
+auto BufferPoolManager::FlushPage(page_id_t page_id) -> bool {
+  std::lock_guard<std::mutex> guard{latch_};
+  return WritePageToDisk(page_id);
+}
+
 void BufferPoolManager::FlushAllPages() {
+  std::lock_guard<std::mutex> guard{latch_};
   for (auto &p : page_table_) {
-    FlushPage(p.first);
+    WritePageToDisk(p.first);
   }
 }
 
 auto BufferPoolManager::DeletePage(page_id_t page_id) -> bool {
+  std::lock_guard<std::mutex> guard{latch_};
   if (page_table_.find(page_id) == page_table_.end()) {
     return true;
   }

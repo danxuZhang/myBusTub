@@ -214,5 +214,13 @@ class BufferPoolManager {
    * @param frame_id frame id of the page to be reset
    */
   auto ResetPageMetaInFrame(frame_id_t frame_id) -> void;
+
+  /**
+   * @brief Write a page from the buffer pool to the disk, this is a thread-unsafe
+   * implementation of FlushPage
+   * @param page_id page id to be written
+   * @return true if write is successful
+   */
+  auto WritePageToDisk(page_id_t page_id) -> bool;
 };
 }  // namespace bustub

@@ -182,7 +182,7 @@ class LRUKReplacer {
   auto Size() -> size_t;
 
  private:
-  std::map<frame_id_t, LRUKNode> node_store_;
+  std::unordered_map<frame_id_t, LRUKNode> node_store_;
   size_t current_timestamp_{1};
   size_t curr_size_{0};
   size_t replacer_size_;
