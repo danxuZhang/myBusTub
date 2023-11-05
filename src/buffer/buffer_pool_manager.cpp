@@ -38,8 +38,6 @@ BufferPoolManager::BufferPoolManager(size_t pool_size, DiskManager *disk_manager
 BufferPoolManager::~BufferPoolManager() { delete[] pages_; }
 
 auto BufferPoolManager::ResetPageMetaInFrame(frame_id_t frame_id) -> void {
-  // page_id_t to_reset = pages_[frame_id].GetPageId();
-  // std::cout << to_reset << "\n";
   pages_[frame_id].is_dirty_ = false;
   pages_[frame_id].page_id_ = INVALID_PAGE_ID;
   pages_[frame_id].pin_count_ = 0;
@@ -69,6 +67,7 @@ auto BufferPoolManager::NewPage(page_id_t *page_id) -> Page * {
   page_table_[*page_id] = replacement_frame;
   ResetPageMetaInFrame(replacement_frame);
   pages_[replacement_frame].page_id_ = *page_id;
+  pages_[replacement_frame].ResetMemory();
 
   replacer_->RecordAccess(replacement_frame);
   replacer_->SetEvictable(replacement_frame, false);
