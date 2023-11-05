@@ -208,5 +208,11 @@ class BufferPoolManager {
   }
 
   // TODO(student): You may add additional private members and helper functions
+
+  /**
+   * @brief Reset meta data of a frame in the buffer pool
+   * @param frame_id frame id of the page to be reset
+   */
+  auto ResetPageMetaInFrame(frame_id_t frame_id) -> void;
 };
 }  // namespace bustub
