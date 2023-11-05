@@ -44,7 +44,7 @@ auto BufferPoolManager::ResetPageMetaInFrame(frame_id_t frame_id) -> void {
 }
 
 auto BufferPoolManager::NewPage(page_id_t *page_id) -> Page * {
-  std::lock_guard<std::mutex> guard{latch_};
+  std::scoped_lock lock(latch_);
 
   if (free_list_.empty() && replacer_->Size() == 0) {
     return nullptr;
@@ -77,7 +77,7 @@ auto BufferPoolManager::NewPage(page_id_t *page_id) -> Page * {
 }
 
 auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType access_type) -> Page * {
-  std::lock_guard<std::mutex> guard{latch_};
+  std::scoped_lock lock(latch_);
   auto fid_it = page_table_.find(page_id);
 
   if (fid_it == page_table_.end()) {
@@ -123,7 +123,7 @@ auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType
 }
 
 auto BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty, [[maybe_unused]] AccessType access_type) -> bool {
-  std::lock_guard<std::mutex> guard{latch_};
+  std::scoped_lock lock(latch_);
   if (page_table_.find(page_id) == page_table_.end()) {
     return false;
   }
@@ -163,19 +163,19 @@ auto BufferPoolManager::WritePageToDisk(page_id_t page_id) -> bool {
 }
 
 auto BufferPoolManager::FlushPage(page_id_t page_id) -> bool {
-  std::lock_guard<std::mutex> guard{latch_};
+  std::scoped_lock lock(latch_);
   return WritePageToDisk(page_id);
 }
 
 void BufferPoolManager::FlushAllPages() {
-  std::lock_guard<std::mutex> guard{latch_};
+  std::scoped_lock lock(latch_);
   for (auto &p : page_table_) {
     WritePageToDisk(p.first);
   }
 }
 
 auto BufferPoolManager::DeletePage(page_id_t page_id) -> bool {
-  std::lock_guard<std::mutex> guard{latch_};
+  std::scoped_lock lock(latch_);
   if (page_table_.find(page_id) == page_table_.end()) {
     return true;
   }

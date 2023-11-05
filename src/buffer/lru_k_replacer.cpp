@@ -45,11 +45,11 @@ auto LRUKNode::GetKBackDist(size_t current_timestamp) const -> size_t {
 LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k) : replacer_size_(num_frames), k_(k) {}
 
 auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
+  std::scoped_lock lock(latch_);
   if (node_store_.empty() || curr_size_ == 0) {
     return false;
   }
 
-  std::lock_guard<std::mutex> guard{latch_};
   std::vector<std::unique_ptr<LRUKNode>> inf_nodes;
   size_t max_k_dist = 0;
   std::unique_ptr<LRUKNode> max_k_dist_node;
@@ -89,11 +89,10 @@ auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
 }
 
 void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType access_type) {
+  std::scoped_lock lock(latch_);
   if (static_cast<size_t>(frame_id) >= replacer_size_) {
     throw std::invalid_argument{"invalid frame id"};
   }
-
-  std::lock_guard<std::mutex> guard{latch_};
 
   auto it = node_store_.find(frame_id);
 
@@ -109,7 +108,7 @@ void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType
 }
 
 void LRUKReplacer::SetEvictable(frame_id_t frame_id, bool set_evictable) {
-  std::lock_guard<std::mutex> guard{latch_};
+  std::scoped_lock lock(latch_);
   auto it = node_store_.find(frame_id);
 
   if (it == node_store_.end()) {
@@ -126,7 +125,7 @@ void LRUKReplacer::SetEvictable(frame_id_t frame_id, bool set_evictable) {
 }
 
 void LRUKReplacer::Remove(frame_id_t frame_id) {
-  std::lock_guard<std::mutex> guard{latch_};
+  std::scoped_lock lock(latch_);
   auto it = node_store_.find(frame_id);
   if (it == node_store_.end()) {
     return;
