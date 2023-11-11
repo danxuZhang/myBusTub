@@ -16,24 +16,36 @@
 
 namespace bustub {
 
-DiskScheduler::DiskScheduler(DiskManager *disk_manager) : disk_manager_(disk_manager) {
+DiskScheduler::DiskScheduler(DiskManager *disk_manager, int num_workers) : disk_manager_(disk_manager) {
   //  throw NotImplementedException(
   //      "DiskScheduler is not implemented yet. If you have finished implementing the disk scheduler, please remove the
   //      " "throw exception line in `disk_scheduler.cpp`.");
 
-  // Spawn the background thread
-  background_thread_.emplace([&] { StartWorkerThread(); });
+  // Spawn the background threads
+  StartMultiWorkerThreads(num_workers);
 }
 
 DiskScheduler::~DiskScheduler() {
   // Put a `std::nullopt` in the queue to signal to exit the loop
-  request_queue_.Put(std::nullopt);
-  if (background_thread_.has_value()) {
-    background_thread_->join();
+  // Signal all threads to exit
+  for (size_t i = 0; i < worker_threads_.size(); ++i) {
+    request_queue_.Put(std::nullopt);
+  }
+  // Join all threads
+  for (auto &thread : worker_threads_) {
+    if (thread.joinable()) {
+      thread.join();
+    }
   }
 }
 
 void DiskScheduler::Schedule(DiskRequest r) { request_queue_.Put(std::make_optional<DiskRequest>(std::move(r))); }
+
+void DiskScheduler::StartMultiWorkerThreads(int num_threads) {
+  for (int i = 0; i < num_threads; ++i) {
+    worker_threads_.emplace_back([&] { StartWorkerThread(); });
+  }
+}
 
 void DiskScheduler::StartWorkerThread() {
   auto request = request_queue_.Get();
