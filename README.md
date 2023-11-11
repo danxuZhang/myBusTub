@@ -1,5 +1,6 @@
 # Update
 
+* Nov 11, 2023: Complete [Project #1: Buffer Pool](https://15445.courses.cs.cmu.edu/fall2023/project1/)
 * Oct 24, 2023: Complete [Project #0: C++ Primer](https://15445.courses.cs.cmu.edu/fall2023/project0/)
 
 ---
