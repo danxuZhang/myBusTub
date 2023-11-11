@@ -47,6 +47,7 @@ auto BufferPoolManager::NewPage(page_id_t *page_id) -> Page * {
   std::scoped_lock lock(latch_);
 
   if (free_list_.empty() && replacer_->Size() == 0) {
+    *page_id = INVALID_PAGE_ID;
     return nullptr;
   }
 
@@ -64,10 +65,11 @@ auto BufferPoolManager::NewPage(page_id_t *page_id) -> Page * {
 
   *page_id = AllocatePage();
 
-  page_table_[*page_id] = replacement_frame;
+  pages_[replacement_frame].ResetMemory();
   ResetPageMetaInFrame(replacement_frame);
   pages_[replacement_frame].page_id_ = *page_id;
-  pages_[replacement_frame].ResetMemory();
+
+  page_table_[*page_id] = replacement_frame;
 
   replacer_->RecordAccess(replacement_frame);
   replacer_->SetEvictable(replacement_frame, false);
@@ -83,28 +85,34 @@ auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType
   if (fid_it == page_table_.end()) {
     // if the page is not in the buffer pool
     if (free_list_.empty() && replacer_->Size() == 0) {
+      // if there is no replacement from free list or replacer
       return nullptr;
     }
 
     frame_id_t replacement_frame;
+    page_id_t replacement_page = INVALID_PAGE_ID;
     if (!free_list_.empty()) {
       replacement_frame = free_list_.front();
       free_list_.pop_front();
     } else {
       replacer_->Evict(&replacement_frame);
-      page_table_.erase(pages_[replacement_frame].GetPageId());
+      replacement_page = pages_[replacement_frame].GetPageId();
     }
 
     if (pages_[replacement_frame].IsDirty()) {
       WritePageToDisk(pages_[replacement_frame].GetPageId());
     }
+
+    page_table_.erase(replacement_page);
+
+    pages_[replacement_frame].ResetMemory();
     ResetPageMetaInFrame(replacement_frame);
     page_table_[page_id] = replacement_frame;
     pages_[replacement_frame].page_id_ = page_id;
 
     // fetch from the disk
-    std::promise<bool> callback;
-    std::future<bool> future = callback.get_future();
+    DiskScheduler::DiskSchedulerPromise callback;
+    auto future = callback.get_future();
     DiskRequest read_req{false, pages_[replacement_frame].data_, page_id, std::move(callback)};
     disk_scheduler_->Schedule(std::move(read_req));
     future.get();
@@ -152,8 +160,8 @@ auto BufferPoolManager::WritePageToDisk(page_id_t page_id) -> bool {
 
   frame_id_t fid = page_table_.at(page_id);
 
-  std::promise<bool> callback;
-  std::future<bool> future = callback.get_future();
+  DiskScheduler::DiskSchedulerPromise callback;
+  auto future = callback.get_future();
   DiskRequest request{true, pages_[fid].data_, page_id, std::move(callback)};
   disk_scheduler_->Schedule(std::move(request));
   future.get();
