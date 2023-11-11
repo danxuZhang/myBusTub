@@ -12,6 +12,7 @@
 
 #include "buffer/buffer_pool_manager.h"
 
+#include <cpp_random_distributions/zipfian_int_distribution.h>
 #include <cstdio>
 #include <limits>
 #include <random>
@@ -23,7 +24,7 @@ namespace bustub {
 
 // NOLINTNEXTLINE
 // Check whether pages containing terminal characters can be recovered
-TEST(BufferPoolManagerTest, DISABLED_BinaryDataTest) {
+TEST(BufferPoolManagerTest, BinaryDataTest) {
   const std::string db_name = "test.db";
   const size_t buffer_pool_size = 10;
   const size_t k = 5;
@@ -97,7 +98,7 @@ TEST(BufferPoolManagerTest, DISABLED_BinaryDataTest) {
 }
 
 // NOLINTNEXTLINE
-TEST(BufferPoolManagerTest, DISABLED_SampleTest) {
+TEST(BufferPoolManagerTest, SampleTest) {
   const std::string db_name = "test.db";
   const size_t buffer_pool_size = 10;
   const size_t k = 5;
@@ -145,6 +146,50 @@ TEST(BufferPoolManagerTest, DISABLED_SampleTest) {
   EXPECT_EQ(true, bpm->UnpinPage(0, true));
   EXPECT_NE(nullptr, bpm->NewPage(&page_id_temp));
   EXPECT_EQ(nullptr, bpm->FetchPage(0));
+
+  // Shutdown the disk manager and remove the temporary file we created.
+  disk_manager->ShutDown();
+  remove("test.db");
+
+  delete bpm;
+  delete disk_manager;
+}
+
+TEST(BufferPoolManagerTest, StressTest) {
+  const std::string db_name = "test.db";
+  const size_t buffer_pool_size = 64;
+  const size_t k = 16;
+  const size_t total_page = 6400;
+
+  auto *disk_manager = new DiskManager(db_name);
+  auto *bpm = new BufferPoolManager(buffer_pool_size, disk_manager, k);
+
+  std::vector<page_id_t> page_ids;
+  std::vector<Page *> pages;
+
+  // create some pages and do some modifications
+  for (size_t i = 0; i < total_page; ++i) {
+    page_id_t page_id;
+    auto *page = bpm->NewPage(&page_id);
+    if (page == nullptr) {
+      throw std::runtime_error("new page failed");
+    }
+    ASSERT_EQ(page_id, i);
+
+    snprintf(page->GetData(), BUSTUB_PAGE_SIZE, "%s", std::to_string(page_id).c_str());
+
+    bpm->UnpinPage(page_id, true);
+    pages.push_back(page);
+    page_ids.push_back(page_id);
+  }
+
+  for (size_t i = 0; i < total_page; ++i) {
+    auto page_id = page_ids[i];
+    auto page = bpm->FetchPage(page_id);
+    ASSERT_EQ(pages[i], page);
+    EXPECT_EQ(std::string(page->GetData()), std::to_string(page_id));
+    bpm->UnpinPage(page_id, false);
+  }
 
   // Shutdown the disk manager and remove the temporary file we created.
   disk_manager->ShutDown();
