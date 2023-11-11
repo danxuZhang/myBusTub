@@ -213,12 +213,12 @@ auto BustubInstance::ExecuteSql(const std::string &sql, ResultWriter &writer,
   auto *txn = txn_manager_->Begin();
   try {
     auto result = ExecuteSqlTxn(sql, writer, txn, std::move(check_options));
-    txn_manager_->Commit(txn);
-    delete txn;
+    if (!txn_manager_->Commit(txn)) {
+      throw Exception("failed to commit txn");
+    }
     return result;
   } catch (bustub::Exception &ex) {
     txn_manager_->Abort(txn);
-    delete txn;
     throw ex;
   }
 }
@@ -347,7 +347,6 @@ void BustubInstance::GenerateTestTable() {
   l.unlock();
 
   txn_manager_->Commit(txn);
-  delete txn;
 }
 
 /**
@@ -366,7 +365,6 @@ void BustubInstance::GenerateMockTable() {
   l.unlock();
 
   txn_manager_->Commit(txn);
-  delete txn;
 }
 
 BustubInstance::~BustubInstance() {
