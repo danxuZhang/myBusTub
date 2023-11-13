@@ -83,9 +83,9 @@ class BasicPageGuard {
    */
   auto UpgradeWrite() -> WritePageGuard;
 
-  auto PageId() -> page_id_t { return page_->GetPageId(); }
+  auto PageId() const -> page_id_t { return page_->GetPageId(); }
 
-  auto GetData() -> const char * { return page_->GetData(); }
+  auto GetData() const -> const char * { return page_->GetData(); }
 
   template <class T>
   auto As() -> const T * {
@@ -106,9 +106,11 @@ class BasicPageGuard {
   friend class ReadPageGuard;
   friend class WritePageGuard;
 
-  [[maybe_unused]] BufferPoolManager *bpm_{nullptr};
+  BufferPoolManager *bpm_{nullptr};
   Page *page_{nullptr};
   bool is_dirty_{false};
+
+  auto DropNoUnpin() -> void;
 };
 
 class ReadPageGuard {
