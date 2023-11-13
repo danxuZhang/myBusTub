@@ -75,11 +75,11 @@ class LRUKNode {
 
  private:
   struct Access {
-    size_t timestamp;
-    ushort weight;
+    size_t timestamp_;
+    size_t weight_;
   };
 
-  static auto GetAccessWeight(AccessType type) -> ushort;
+  static auto GetAccessWeight(AccessType type) -> size_t;
 
   /** History of last seen K timestamps of this page. Least recent timestamp stored in front. */
   std::list<Access> history_;

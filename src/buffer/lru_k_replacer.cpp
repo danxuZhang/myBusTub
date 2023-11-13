@@ -27,7 +27,7 @@ auto LRUKNode::SetEvictable(bool set_evictable) -> void { is_evictable_ = set_ev
 
 auto LRUKNode::RecordAccess(size_t timestamp, AccessType type) -> void {
   if (history_.size() == k_) {
-    total_weight_ -= history_.front().weight;
+    total_weight_ -= history_.front().weight_;
     history_.pop_front();
   }
   const auto weight = GetAccessWeight(type);
@@ -35,14 +35,14 @@ auto LRUKNode::RecordAccess(size_t timestamp, AccessType type) -> void {
   history_.push_back({timestamp, weight});
 }
 
-auto LRUKNode::GetEarliestTimestamp() const -> size_t { return history_.front().timestamp; }
+auto LRUKNode::GetEarliestTimestamp() const -> size_t { return history_.front().timestamp_; }
 
 auto LRUKNode::GetKBackDist(size_t current_timestamp) const -> size_t {
   if (history_.size() < k_) {
     return INF_TIMESTAMP;
   }
 
-  return current_timestamp - history_.front().timestamp;
+  return current_timestamp - history_.front().timestamp_;
 }
 
 auto LRUKNode::GetWeightedKBackDist(size_t current_timestamp) const -> size_t {
@@ -53,7 +53,7 @@ auto LRUKNode::GetWeightedKBackDist(size_t current_timestamp) const -> size_t {
   return total_weight_ * GetKBackDist(current_timestamp) / k_;
 }
 
-auto LRUKNode::GetAccessWeight(AccessType type) -> ushort {
+auto LRUKNode::GetAccessWeight(AccessType type) -> size_t {
   switch (type) {
     case (AccessType::Unknown):
       return 0;
@@ -64,7 +64,7 @@ auto LRUKNode::GetAccessWeight(AccessType type) -> ushort {
     case (AccessType::Lookup):
       return 3;
     default:
-      return -1;
+      return 0;
   }
 }
 
