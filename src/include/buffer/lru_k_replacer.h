@@ -56,7 +56,7 @@ class LRUKNode {
    * @brief Records an access at the given timestamp.
    * @param timestamp The timestamp of the access.
    */
-  auto RecordAccess(size_t timestamp) -> void;
+  auto RecordAccess(size_t timestamp, AccessType type = AccessType::Unknown) -> void;
 
   /**
    * @brief Retrieves the earliest timestamp from the node's access history.
@@ -71,11 +71,21 @@ class LRUKNode {
    */
   auto GetKBackDist(size_t current_timestamp) const -> size_t;
 
+  auto GetWeightedKBackDist(size_t current_timestamp) const -> size_t;
+
  private:
+  struct Access {
+    size_t timestamp;
+    ushort weight;
+  };
+
+  static auto GetAccessWeight(AccessType type) -> ushort;
+
   /** History of last seen K timestamps of this page. Least recent timestamp stored in front. */
-  std::list<size_t> history_;
+  std::list<Access> history_;
   size_t k_;
   frame_id_t fid_;
+  size_t total_weight_{0};
   bool is_evictable_{false};
 };
 

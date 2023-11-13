@@ -25,21 +25,47 @@ auto LRUKNode::IsEvictable() const -> bool { return is_evictable_; }
 
 auto LRUKNode::SetEvictable(bool set_evictable) -> void { is_evictable_ = set_evictable; }
 
-auto LRUKNode::RecordAccess(size_t timestamp) -> void {
+auto LRUKNode::RecordAccess(size_t timestamp, AccessType type) -> void {
   if (history_.size() == k_) {
+    total_weight_ -= history_.front().weight;
     history_.pop_front();
   }
-  history_.push_back(timestamp);
+  const auto weight = GetAccessWeight(type);
+  total_weight_ += weight;
+  history_.push_back({timestamp, weight});
 }
 
-auto LRUKNode::GetEarliestTimestamp() const -> size_t { return history_.front(); }
+auto LRUKNode::GetEarliestTimestamp() const -> size_t { return history_.front().timestamp; }
 
 auto LRUKNode::GetKBackDist(size_t current_timestamp) const -> size_t {
   if (history_.size() < k_) {
     return INF_TIMESTAMP;
   }
 
-  return current_timestamp - history_.front();
+  return current_timestamp - history_.front().timestamp;
+}
+
+auto LRUKNode::GetWeightedKBackDist(size_t current_timestamp) const -> size_t {
+  if (history_.size() < k_) {
+    return INF_TIMESTAMP;
+  }
+
+  return total_weight_ * GetKBackDist(current_timestamp) / k_;
+}
+
+auto LRUKNode::GetAccessWeight(AccessType type) -> ushort {
+  switch (type) {
+    case (AccessType::Unknown):
+      return 0;
+    case (AccessType::Index):
+      return 1;
+    case (AccessType::Scan):
+      return 2;
+    case (AccessType::Lookup):
+      return 3;
+    default:
+      return -1;
+  }
 }
 
 LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k) : replacer_size_(num_frames), k_(k) {}
@@ -60,7 +86,7 @@ auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
       continue;
     }
 
-    size_t k_dist = node.GetKBackDist(current_timestamp_);
+    size_t k_dist = node.GetWeightedKBackDist(current_timestamp_);
     if (k_dist == INF_TIMESTAMP) {
       inf_nodes.push_back(std::make_unique<LRUKNode>(node));
       continue;
@@ -88,7 +114,7 @@ auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
   return true;
 }
 
-void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType access_type) {
+void LRUKReplacer::RecordAccess(frame_id_t frame_id, const AccessType access_type) {
   std::scoped_lock lock(latch_);
   if (static_cast<size_t>(frame_id) >= replacer_size_) {
     throw std::invalid_argument{"invalid frame id"};
@@ -98,10 +124,10 @@ void LRUKReplacer::RecordAccess(frame_id_t frame_id, [[maybe_unused]] AccessType
 
   if (it == node_store_.end()) {
     LRUKNode new_node{frame_id, k_};
-    new_node.RecordAccess(current_timestamp_);
+    new_node.RecordAccess(current_timestamp_, access_type);
     node_store_.emplace(frame_id, new_node);
   } else {
-    it->second.RecordAccess(current_timestamp_);
+    it->second.RecordAccess(current_timestamp_, access_type);
   }
 
   current_timestamp_++;
