@@ -56,7 +56,6 @@ auto LRUKNode::GetWeightedKBackDist(size_t current_timestamp) const -> size_t {
 auto LRUKNode::GetAccessWeight(AccessType type) -> size_t {
   switch (type) {
     case (AccessType::Unknown):
-      return 0;
     case (AccessType::Index):
       return 1;
     case (AccessType::Scan):
@@ -64,7 +63,7 @@ auto LRUKNode::GetAccessWeight(AccessType type) -> size_t {
     case (AccessType::Lookup):
       return 3;
     default:
-      return 0;
+      return 1;
   }
 }
 
