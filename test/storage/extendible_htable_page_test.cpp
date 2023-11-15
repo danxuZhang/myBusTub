@@ -29,7 +29,7 @@
 namespace bustub {
 
 // NOLINTNEXTLINE
-TEST(ExtendibleHTableTest, DISABLED_BucketPageSampleTest) {
+TEST(ExtendibleHTableTest, BucketPageSampleTest) {
   auto disk_mgr = std::make_unique<DiskManagerUnlimitedMemory>();
   auto bpm = std::make_unique<BufferPoolManager>(5, disk_mgr.get());
 
@@ -87,7 +87,7 @@ TEST(ExtendibleHTableTest, DISABLED_BucketPageSampleTest) {
 }
 
 // NOLINTNEXTLINE
-TEST(ExtendibleHTableTest, DISABLED_HeaderDirectoryPageSampleTest) {
+TEST(ExtendibleHTableTest, HeaderDirectoryPageSampleTest) {
   auto disk_mgr = std::make_unique<DiskManagerUnlimitedMemory>();
   auto bpm = std::make_unique<BufferPoolManager>(5, disk_mgr.get());
 
@@ -158,6 +158,7 @@ TEST(ExtendibleHTableTest, DISABLED_HeaderDirectoryPageSampleTest) {
     directory_page->SetBucketPageId(1, bucket_page_id_2);
     directory_page->SetLocalDepth(1, 1);
 
+    directory_page->PrintDirectory();
     /*
     ======== DIRECTORY (global_depth_: 1) ========
     | bucket_idx | page_id | local_depth |
@@ -179,6 +180,7 @@ TEST(ExtendibleHTableTest, DISABLED_HeaderDirectoryPageSampleTest) {
     directory_page->IncrGlobalDepth();
     directory_page->SetBucketPageId(2, bucket_page_id_3);
 
+    directory_page->PrintDirectory();
     /*
     ======== DIRECTORY (global_depth_: 2) ========
     | bucket_idx | page_id | local_depth |

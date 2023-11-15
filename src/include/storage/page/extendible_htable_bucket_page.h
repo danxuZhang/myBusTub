@@ -135,6 +135,8 @@ class ExtendibleHTableBucketPage {
   uint32_t size_;
   uint32_t max_size_;
   MappingType array_[HTableBucketArraySize(sizeof(MappingType))];
+
+  auto IsEqual(const KeyType &k1, const KeyType &k2, const KeyComparator &cmp) const noexcept;
 };
 
 }  // namespace bustub
