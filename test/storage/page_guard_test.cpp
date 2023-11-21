@@ -68,9 +68,9 @@ TEST(PageGuardTest, PageGuardTest) {
 }
 
 // NOLINTNEXTLINE
-TEST(MultiReaderTest, PageGuardTest) {
-  constexpr size_t buffer_pool_size = 5;
-  constexpr size_t k = 2;
+TEST(PageGuardTest, MultiReaderTest) {
+  constexpr size_t buffer_pool_size = 10;
+  constexpr size_t k = 3;
 
   const auto disk_manager = std::make_shared<DiskManagerUnlimitedMemory>();
   const auto bpm = std::make_shared<BufferPoolManager>(buffer_pool_size, disk_manager.get(), k);
@@ -111,9 +111,10 @@ TEST(MultiReaderTest, PageGuardTest) {
   disk_manager->ShutDown();
 }
 
-TEST(MultiWriterTest, PageGuardTest) {
-  constexpr size_t buffer_pool_size = 5;
-  constexpr size_t k = 2;
+// NOLINTNEXTLINE
+TEST(PageGuardTest, MultiWriterTest) {
+  constexpr size_t buffer_pool_size = 10;
+  constexpr size_t k = 3;
 
   const auto disk_manager = std::make_shared<DiskManagerUnlimitedMemory>();
   const auto bpm = std::make_shared<BufferPoolManager>(buffer_pool_size, disk_manager.get(), k);
