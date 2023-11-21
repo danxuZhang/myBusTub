@@ -23,7 +23,7 @@ namespace bustub {
 void ExtendibleHTableDirectoryPage::Init(uint32_t max_depth) {
   max_depth_ = max_depth;
   global_depth_ = 0;
-  for (uint64_t i = 0; i < HTABLE_DIRECTORY_ARRAY_SIZE; ++i) {
+  for (uint32_t i = 0; i < HTABLE_DIRECTORY_ARRAY_SIZE; ++i) {
     local_depths_[i] = 0;
     bucket_page_ids_[i] = INVALID_PAGE_ID;
   }
@@ -60,19 +60,32 @@ auto ExtendibleHTableDirectoryPage::GetMaxDepth() const -> uint32_t { return max
 
 auto ExtendibleHTableDirectoryPage::GetGlobalDepth() const -> uint32_t { return global_depth_; }
 
-void ExtendibleHTableDirectoryPage::IncrGlobalDepth() { global_depth_++; }
+void ExtendibleHTableDirectoryPage::IncrGlobalDepth() {
+  if (global_depth_ == max_depth_) {
+    return ;
+  }
 
-void ExtendibleHTableDirectoryPage::DecrGlobalDepth() { global_depth_--; }
+  for (uint32_t i = 0; i < Size(); ++i) {
+    bucket_page_ids_[i + Size()] = bucket_page_ids_[i];
+    local_depths_[i + Size()] = local_depths_[i];
+  }
+  global_depth_++;
+}
+
+void ExtendibleHTableDirectoryPage::DecrGlobalDepth() {
+  if (!CanShrink()) {
+    return ;
+  }
+  global_depth_--;
+}
 
 auto ExtendibleHTableDirectoryPage::CanShrink() -> bool {
   if (global_depth_ == 0) {
     return false;
   }
 
-  const uint32_t half_size = 1 << (global_depth_ - 1);
-  for (uint32_t i = 0; i < half_size; ++i) {
-    uint32_t paired_id = i + half_size;
-    if (bucket_page_ids_[i] == bucket_page_ids_[paired_id] || GetLocalDepth(i) != GetLocalDepth(paired_id)) {
+  for (uint32_t i = 0; i < Size(); ++i) {
+    if (local_depths_[i] == global_depth_) {
       return false;
     }
   }
