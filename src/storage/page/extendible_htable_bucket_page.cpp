@@ -43,7 +43,7 @@ auto ExtendibleHTableBucketPage<K, V, KC>::Insert(const K &key, const V &value, 
   }
 
   for (uint32_t i = 0; i < size_; ++i) {
-    const auto& [k, v] = array_[i];
+    const auto &[k, v] = array_[i];
     if (IsEqual(k, key, cmp)) {
       return false;
     }
@@ -61,7 +61,7 @@ auto ExtendibleHTableBucketPage<K, V, KC>::Remove(const K &key, const KC &cmp) -
   }
 
   for (uint32_t i = 0; i < size_; ++i) {
-    const auto& [k, v] = array_[i];
+    const auto &[k, v] = array_[i];
     if (IsEqual(k, key, cmp)) {
       RemoveAt(i);
       return true;
@@ -79,7 +79,7 @@ void ExtendibleHTableBucketPage<K, V, KC>::RemoveAt(uint32_t bucket_idx) {
     throw std::invalid_argument("index out of bound");
   }
   for (auto i = bucket_idx + 1; i < size_; ++i) {
-    array_[i-1]  = std::move(array_[i]);
+    array_[i - 1] = std::move(array_[i]);
   }
   size_--;
 }
@@ -117,9 +117,8 @@ auto ExtendibleHTableBucketPage<K, V, KC>::IsEmpty() const -> bool {
 template <typename K, typename V, typename KC>
 auto ExtendibleHTableBucketPage<K, V, KC>::IsEqual(const K &k1, const K &k2, const KC &cmp) const noexcept {
   // equals if k1 >= k2 and k2 >= k1
-  return !cmp(k1, k2)   && !cmp(k2, k1);
+  return !cmp(k1, k2) && !cmp(k2, k1);
 }
-
 
 template class ExtendibleHTableBucketPage<int, int, IntComparator>;
 template class ExtendibleHTableBucketPage<GenericKey<4>, RID, GenericComparator<4>>;

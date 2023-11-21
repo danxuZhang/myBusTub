@@ -62,7 +62,7 @@ auto ExtendibleHTableDirectoryPage::GetGlobalDepth() const -> uint32_t { return 
 
 void ExtendibleHTableDirectoryPage::IncrGlobalDepth() {
   if (global_depth_ == max_depth_) {
-    return ;
+    return;
   }
 
   for (uint32_t i = 0; i < Size(); ++i) {
@@ -74,7 +74,13 @@ void ExtendibleHTableDirectoryPage::IncrGlobalDepth() {
 
 void ExtendibleHTableDirectoryPage::DecrGlobalDepth() {
   if (!CanShrink()) {
-    return ;
+    return;
+  }
+
+  const uint32_t new_size = 1 << (global_depth_ - 1);
+  for (uint32_t i = new_size; i < Size(); ++i) {
+    bucket_page_ids_[i] = INVALID_PAGE_ID;
+    local_depths_[i] = 0;
   }
   global_depth_--;
 }
